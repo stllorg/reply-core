@@ -139,7 +139,7 @@ public class TicketResource {
     // GET ALL TICKETS created by a User
     @GET
     @Path("/user/{userId}")
-    public Response getTicketsByUserId(@PathParam("id") UUID id) {
+    public Response getTicketsByUserId(@PathParam("userId") UUID id) {
         List<Ticket> tickets = ticketService.findTicketsByUserId(id);
         return Response.ok(tickets).build();
     }
