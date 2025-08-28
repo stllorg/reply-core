@@ -62,7 +62,7 @@ public class TicketRepository {
 
         try {
             tickets = em.createNativeQuery(
-                            "SELECT t.id, t.subject, created_at FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' "
+                            "SELECT t.id, t.subject, t.created_at FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' "
                     )
                     .getResultList();
 
@@ -92,7 +92,7 @@ public class TicketRepository {
     public Optional<Ticket> findById(UUID ticketId) {
         try {
             Ticket ticket = (Ticket) em.createNativeQuery(
-                    "SELECT id, subject, status, is_repeat, created_at FROM tickets WHERE id = ?", Ticket.class
+                    "SELECT id, subject, status, is_repeat, created_at, user_id FROM tickets WHERE id = ?", Ticket.class
             ).setParameter(1, ticketId)
                     .getSingleResult();
 
@@ -106,7 +106,7 @@ public class TicketRepository {
     public Optional<UUID> findUserIdByTicketId(UUID ticketId) {
         try {
             Ticket ticket = (Ticket) em.createNativeQuery(
-                            "SELECT id, userId FROM tickets WHERE id = ?", Ticket.class
+                            "SELECT id, user_id FROM tickets WHERE id = ?", Ticket.class
                     ).setParameter(1, ticketId)
                     .getSingleResult();
 
