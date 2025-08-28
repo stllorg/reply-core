@@ -1,7 +1,6 @@
 # Gradle
 .gradle/
 # Maven
-.mvn/
 
 target/
 build/
