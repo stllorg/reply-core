@@ -120,11 +120,14 @@ public class TicketRepository {
 
     @Transactional
     public Ticket update(Ticket ticket) {
+        log.info("TicketRepository: Received ticket to update with ID : " + ticket.getId());
+
         int rowsAffected = em.createNativeQuery(
-                        "UPDATE tickets SET subject = ?, status = ? WHERE id = ?"
+                        "UPDATE tickets SET subject = ?, status = ?::ticket_status WHERE id = ?"
                 )
                 .setParameter(1, ticket.getSubject())
                 .setParameter(2, ticket.getStatus())
+                .setParameter(3, ticket.getId())
                 .executeUpdate();
 
         return em.find(Ticket.class, ticket.getId());
