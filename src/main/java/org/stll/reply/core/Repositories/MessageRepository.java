@@ -34,14 +34,16 @@ public class MessageRepository {
         //   Return id of most recent message found
         // Optional<UUID> savedMessageId = findIdOfLastMessageCreatedByUserId(message.getUserId());
         // savedMessageId.ifPresent(message::setId);
+        log.info("MessageRepository: Successfully saved message! Trying to retrieve message id");
 
-        // Retrieve the saved message
-        Optional<Message> savedMessage = findLastMessageCreatedByUserId(message.getUserId());
 
         try {
-            log.info("MessageRepository: Successfully saved message with ID" + savedMessage.get().getId());
+            // Retrieve the saved message
+            Optional<Message> savedMessage = findLastMessageCreatedByUserId(message.getUserId());
+            log.info("MessageRepository: Retrieving saved message ID" + savedMessage.get().getId());
             return savedMessage.get();
         } catch (NoSuchElementException e){
+            log.error("MessageRepository: Failed to retrieve saved message ID");
             throw new InternalServerErrorException("Failed to retrieve the saved message.");
         }
     }
@@ -97,13 +99,13 @@ public class MessageRepository {
         log.info("MessageRepository: Trying to find last message created by user id: " + userId);
         try {
             return Optional.of(
-                    (Message) em.createQuery(
-                                    "SELECT m FROM Message m WHERE m.user_id = ? ORDER BY m.createdAt DESC"
+                    (Message) em.createNativeQuery(
+                                    "SELECT * FROM ticket_messages WHERE user_id = ? ORDER BY created_at DESC", Message.class
                             )
                             .setParameter(1, userId)
-                            .setMaxResults(1)
                             .getSingleResult()
             );
+
         } catch (NoResultException e) {
             log.warn("MessageRepository: No messages found for user ID: " + userId);
             return Optional.empty();
