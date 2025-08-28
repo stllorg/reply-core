@@ -11,8 +11,10 @@ import org.stll.reply.core.Entities.Ticket;
 import org.stll.reply.core.Services.TicketService;
 import org.stll.reply.core.dtos.CreateTicketRequest;
 import org.stll.reply.core.dtos.SaveTicketResponse;
+import org.stll.reply.core.dtos.UpdateTicketRequest;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Path("/tickets")
@@ -78,10 +80,39 @@ public class TicketResource {
     // UPDATE ticket
     @PUT
     @Path("/{id}")
-    public Response updateTicket(Ticket updatedTicket) {
-        return ticketService.updateTicket(updatedTicket)
-                .map(ticket -> Response.ok(ticket).build())
-                .orElse(Response.status(Response.Status.NOT_FOUND).build());
+    public Response updateTicket(@PathParam("id") UUID id, UpdateTicketRequest request) {
+        Optional <Ticket> ticketOptional = ticketService.findTicketById(id);
+
+        if (ticketOptional.isPresent()) {
+            Ticket ticketToUpdate = ticketOptional.get();
+            ticketToUpdate.setSubject(request.subject);
+
+            return ticketService.updateTicket(ticketToUpdate)
+                    .map(ticket -> Response.ok(ticket).build())
+                    .orElse(Response.status(Response.Status.NOT_FOUND).build());
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    }
+
+    // UPDATE ticket status to closed to archive ticket
+    @PUT
+    @Path("/{id}/archive")
+    @RolesAllowed({"admin", "manager", "user"})
+    public Response archiveTicket(@PathParam("id") UUID id) {
+        Optional<Ticket> ticketOptional = ticketService.findTicketById(id);
+
+        if (ticketOptional.isPresent()) {
+            Ticket ticketToArchive = ticketOptional.get();
+            ticketToArchive.setStatus("closed");
+
+            return ticketService.updateTicket(ticketToArchive)
+                    .map(ticket -> Response.ok(ticket).build())
+                    .orElse(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        } else {
+            // Ticket was not found, return 404.
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 
     // DELETE ticket
