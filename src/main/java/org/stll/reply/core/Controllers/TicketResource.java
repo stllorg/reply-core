@@ -147,7 +147,7 @@ public class TicketResource {
     // GET Tickets Ids with User Messages By User Id
     @GET
     @Path("/user/{userId}/tickets")
-    public Response getTicketIdsByUserId(@PathParam("userId") UUID userId) {
+    public Response getTicketIdsWithUserMessagesByUserId(@PathParam("userId") UUID userId) {
         List<UUID> ticketIds = ticketService.getTicketIdsWithUserMessagesByUserId(userId);
         return Response.ok(ticketIds).build();
     }
