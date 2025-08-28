@@ -8,10 +8,8 @@ import jakarta.transaction.Transactional;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Ticket;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @JBossLog
@@ -133,17 +131,21 @@ public class TicketRepository {
         return em.find(Ticket.class, ticket.getId());
     }
 
-    public List<UUID> findAllTicketIdWithUserMessages(UUID ticketId) {
+    public List<UUID> findAllTicketIdWithUserMessages(UUID userId) {
 
         List<UUID> ticketsIds;
-
         try {
-            ticketsIds = em.createNativeQuery(
+            List<Object> foundTicketsIds = em.createNativeQuery(
                             "SELECT DISTINCT ticket_id FROM ticket_messages WHERE user_id = ?"
                     )
-                    .setParameter(1, ticketId)
+                    .setParameter(1, userId)
                     .getResultList();
 
+            ticketsIds = (List<UUID>) foundTicketsIds.stream()
+                    .map(obj -> (UUID) obj)
+                    .collect(Collectors.toList());
+
+            log.info("TicketRepository: Tickets Found  : " + ticketsIds.size());
         } catch (jakarta.persistence.NoResultException e) {
             ticketsIds = Collections.emptyList();
         }
