@@ -98,9 +98,9 @@ public class MessageRepository {
         try {
             return Optional.of(
                     (Message) em.createQuery(
-                                    "SELECT m FROM Message m WHERE m.userId = :userId ORDER BY m.createdAt DESC"
+                                    "SELECT m FROM Message m WHERE m.user_id = ? ORDER BY m.createdAt DESC"
                             )
-                            .setParameter("userId", userId)
+                            .setParameter(1, userId)
                             .setMaxResults(1)
                             .getSingleResult()
             );
