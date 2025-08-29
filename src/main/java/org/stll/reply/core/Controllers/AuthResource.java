@@ -43,7 +43,7 @@ public class AuthResource {
                     user.getEmail()
             );
 
-            return Response.ok(userResponse).build();
+            return Response.status(Response.Status.CREATED).entity(userResponse).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
