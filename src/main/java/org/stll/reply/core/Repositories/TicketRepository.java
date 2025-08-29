@@ -8,10 +8,8 @@ import jakarta.transaction.Transactional;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Ticket;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @JBossLog
@@ -62,7 +60,7 @@ public class TicketRepository {
 
         try {
             tickets = em.createNativeQuery(
-                            "SELECT t.id, t.subject, created_at FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' "
+                            "SELECT t.id, t.subject, t.created_at FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' "
                     )
                     .getResultList();
 
@@ -92,7 +90,7 @@ public class TicketRepository {
     public Optional<Ticket> findById(UUID ticketId) {
         try {
             Ticket ticket = (Ticket) em.createNativeQuery(
-                    "SELECT id, subject, status, is_repeat, created_at FROM tickets WHERE id = ?", Ticket.class
+                    "SELECT id, subject, status, is_repeat, created_at, user_id FROM tickets WHERE id = ?", Ticket.class
             ).setParameter(1, ticketId)
                     .getSingleResult();
 
@@ -106,7 +104,7 @@ public class TicketRepository {
     public Optional<UUID> findUserIdByTicketId(UUID ticketId) {
         try {
             Ticket ticket = (Ticket) em.createNativeQuery(
-                            "SELECT id, userId FROM tickets WHERE id = ?", Ticket.class
+                            "SELECT id, user_id FROM tickets WHERE id = ?", Ticket.class
                     ).setParameter(1, ticketId)
                     .getSingleResult();
 
@@ -120,27 +118,34 @@ public class TicketRepository {
 
     @Transactional
     public Ticket update(Ticket ticket) {
+        log.info("TicketRepository: Received ticket to update with ID : " + ticket.getId());
+
         int rowsAffected = em.createNativeQuery(
-                        "UPDATE tickets SET subject = ?, status = ? WHERE id = ?"
+                        "UPDATE tickets SET subject = ?, status = ?::ticket_status WHERE id = ?"
                 )
                 .setParameter(1, ticket.getSubject())
                 .setParameter(2, ticket.getStatus())
+                .setParameter(3, ticket.getId())
                 .executeUpdate();
 
         return em.find(Ticket.class, ticket.getId());
     }
 
-    public List<UUID> findAllTicketIdWithUserMessages(UUID ticketId) {
+    public List<UUID> findAllTicketIdWithUserMessages(UUID userId) {
 
         List<UUID> ticketsIds;
-
         try {
-            ticketsIds = em.createNativeQuery(
+            List<Object> foundTicketsIds = em.createNativeQuery(
                             "SELECT DISTINCT ticket_id FROM ticket_messages WHERE user_id = ?"
                     )
-                    .setParameter(1, ticketId)
+                    .setParameter(1, userId)
                     .getResultList();
 
+            ticketsIds = (List<UUID>) foundTicketsIds.stream()
+                    .map(obj -> (UUID) obj)
+                    .collect(Collectors.toList());
+
+            log.info("TicketRepository: Tickets Found  : " + ticketsIds.size());
         } catch (jakarta.persistence.NoResultException e) {
             ticketsIds = Collections.emptyList();
         }
