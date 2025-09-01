@@ -118,6 +118,7 @@ public class MessageRepository {
                                     "SELECT * FROM ticket_messages WHERE user_id = ? ORDER BY created_at DESC", Message.class
                             )
                             .setParameter(1, userId)
+                            .setMaxResults(1)
                             .getSingleResult()
             );
 
