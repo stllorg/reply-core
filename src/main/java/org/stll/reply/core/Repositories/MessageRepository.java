@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.InternalServerErrorException;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Message;
+import org.stll.reply.core.Entities.Ticket;
 
 import java.util.*;
 
@@ -46,6 +47,20 @@ public class MessageRepository {
             log.error("MessageRepository: Failed to retrieve saved message ID");
             throw new InternalServerErrorException("Failed to retrieve the saved message.");
         }
+    }
+
+    @Transactional
+    public Message update(Message message) {
+        log.info("TicketRepository: Received message to update with ID : " + message.getId());
+
+        int rowsAffected = em.createNativeQuery(
+                        "UPDATE ticket_messages SET message = ? WHERE id = ?"
+                )
+                .setParameter(1, message.getMessage())
+                .setParameter(2, message.getId())
+                .executeUpdate();
+
+        return em.find(Message.class, message.getId());
     }
 
     public Optional<Message> findById(UUID messageId) {

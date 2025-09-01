@@ -10,9 +10,12 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.stll.reply.core.Entities.Message;
 import org.stll.reply.core.Services.MessageService;
 import org.stll.reply.core.dtos.CreateMessageRequest;
+import org.stll.reply.core.dtos.SaveMessageResponse;
+import org.stll.reply.core.dtos.UpdateMessageRequest;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Path("/messages")
@@ -61,6 +64,35 @@ public class MessageResource {
             return Response.created(URI.create("/messages/" + createdMessage.getId())).entity(createdMessage).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    // UPDATE message
+    @PUT
+    @Path("/{id}")
+    public Response updateMessage(@PathParam("id") UUID id, UpdateMessageRequest request) {
+        Optional<Message> messageOptional = messageService.findMessageById(id);
+
+        if (messageOptional.isPresent()) {
+            Message messageToUpdate = messageOptional.get();
+            messageToUpdate.setMessage(request.message);
+
+           return messageService.updateMessage(messageToUpdate)
+                    .map(updatedMessage -> {
+
+                        SaveMessageResponse dto = new SaveMessageResponse(
+                                updatedMessage.getId(),
+                                updatedMessage.getMessage(),
+                                updatedMessage.getCreatedAt()
+                        );
+
+                        return Response.ok(dto).build();
+                            }
+                    )
+                    .orElse(Response.status(Response.Status.NOT_FOUND).build());
+
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
 
