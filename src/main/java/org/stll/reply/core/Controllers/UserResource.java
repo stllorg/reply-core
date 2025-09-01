@@ -17,6 +17,7 @@ import org.stll.reply.core.dtos.RoleUpdateRequest;
 import org.stll.reply.core.dtos.UserDTO;
 import org.stll.reply.core.utils.RolesConverter;
 
+import java.net.URI;
 import java.util.*;
 
 @Path("/users")
@@ -50,7 +51,7 @@ public class UserResource {
                     user.getEmail()
             );
 
-            return Response.ok(userResponse).build();
+            return Response.created(URI.create("/users/" + userResponse.getId())).entity(userResponse).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }

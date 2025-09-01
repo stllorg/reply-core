@@ -13,6 +13,7 @@ import org.stll.reply.core.Entities.User;
 import org.stll.reply.core.Services.AuthService;
 import org.stll.reply.core.dtos.*;
 
+import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -43,7 +44,7 @@ public class AuthResource {
                     user.getEmail()
             );
 
-            return Response.status(Response.Status.CREATED).entity(userResponse).build();
+            return Response.created(URI.create("/users/" + userResponse.getId())).entity(userResponse).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
