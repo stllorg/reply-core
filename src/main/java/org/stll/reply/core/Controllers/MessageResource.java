@@ -2,6 +2,7 @@ package org.stll.reply.core.Controllers;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -116,7 +117,19 @@ public class MessageResource {
     // DELETE message by id
     @DELETE
     @Path("/{id}")
-    public boolean delete(@PathParam("id") UUID id) {
-        return messageService.delete(id);
+    public Response delete(@PathParam("id") UUID id) {
+        try {
+            boolean deleted = messageService.delete(id);
+
+            if (deleted) {
+                return Response.noContent().build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+        } catch (PersistenceException e) {
+        log.error("Failed to delete message with ID: " + id, e);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+
     }
 }
