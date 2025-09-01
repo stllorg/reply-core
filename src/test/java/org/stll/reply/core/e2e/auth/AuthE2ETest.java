@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AuthE2ETest {
 
-    private static final String USERNAME = "testuser_e2e_" + UUID.randomUUID().toString().substring(0, 8);
+    private static final String USERNAME = "a_e2e_" + UUID.randomUUID().toString().substring(0, 8);
     private static final String EMAIL = USERNAME + "@test.com";
     private static final String PASSWORD = "TestPassword123!";
 

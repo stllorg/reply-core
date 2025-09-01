@@ -16,7 +16,7 @@ import java.util.UUID;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TicketE2ETest {
 
-    private static final String USERNAME = "testuser_e2e_" + UUID.randomUUID().toString().substring(0, 8);
+    private static final String USERNAME = "t_e2e_" + UUID.randomUUID().toString().substring(0, 8);
     private static final String EMAIL = USERNAME + "@test.com";
     private static final String PASSWORD = "TestPassword123!";
     private static final String TICKET_SUBJECT = "Ticket for E2E test.";
@@ -78,7 +78,7 @@ public class TicketE2ETest {
                 .post("/tickets");
 
         response.then()
-                .statusCode(200)
+                .statusCode(201)
                 .body("subject", equalTo(TICKET_SUBJECT))
                 .body("id", notNullValue())
                 .body("userId", notNullValue());
