@@ -33,20 +33,20 @@ jobs:
 
       # 📟 Step 4: Build the Quarkus native executable with Maven
       - name: Build Quarkus Native Executable
-        run: ./mvnw package -Pnative -Dquarkus.native.container-build=true -DskipTests=true
+        run: ./mvnw package -Pnative -Dquarkus.native.container-build=true
 
       # 🏷️ Step 5: Define the Docker image tags
       - name: Get commit SHA as tag
         id: commit_sha
         run: echo "TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
-      # ⚒️ Step 8: Build the Docker image from the native executable
+      # ⚒️ Step 6: Build the Docker image from the native executable
       - name: Build Docker image
         run: |
           docker build -f src/main/docker/Dockerfile.native -t stllorg/reply-core .
           docker tag stllorg/reply-core:latest stllorg/reply-core:${{ steps.commit_sha.outputs.TAG }}
 
-      # 🚀 Step 9: Push the newly built Docker image to Docker Hub
+      # 🚀 Step 7: Push the newly built Docker image to Docker Hub
       - name: Push Docker image
         run: |
           docker push stllorg/reply-core:latest
