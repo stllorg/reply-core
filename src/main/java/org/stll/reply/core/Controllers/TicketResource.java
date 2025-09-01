@@ -13,6 +13,7 @@ import org.stll.reply.core.dtos.CreateTicketRequest;
 import org.stll.reply.core.dtos.SaveTicketResponse;
 import org.stll.reply.core.dtos.UpdateTicketRequest;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,8 +62,7 @@ public class TicketResource {
             Ticket createdTicket = ticketService.createTicket(request.subject, userId);
 
             SaveTicketResponse saveTicketResponse = new SaveTicketResponse(createdTicket.getSubject(), createdTicket.getId(), createdTicket.getUserId());
-            // return Response.created(URI.create("/tickets/" + createdTicket.getId())).entity(createdTicket).build();
-            return Response.ok(saveTicketResponse).build();
+            return Response.created(URI.create("/tickets/" + saveTicketResponse.id)).entity(saveTicketResponse).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }

@@ -1,4 +1,4 @@
-package org.stll.reply.core;
+package org.stll.reply.core.e2e.users;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -8,20 +8,21 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.util.UUID;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
-import java.util.UUID;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class TicketE2ETest {
+public class UserE2ETest {
 
     private static final String USERNAME = "testuser_e2e_" + UUID.randomUUID().toString().substring(0, 8);
     private static final String EMAIL = USERNAME + "@test.com";
     private static final String PASSWORD = "TestPassword123!";
-    private static final String TICKET_SUBJECT = "Assunto do meu ticket de teste E2E.";
 
     private static String jwtToken;
+    private static String userId;
 
     @Test
     @Order(1)
@@ -61,24 +62,42 @@ public class TicketE2ETest {
 
     @Test
     @Order(3)
-    public void testTicketCreationWithToken() {
+    public void testGetAuthenticatedUserAndRoles() {
         if (jwtToken == null) {
             throw new IllegalStateException("JWT token not available. Login test might have failed.");
         }
 
-        String ticketPayload = "{\"subject\":\"" + TICKET_SUBJECT + "\"}";
-
         Response response = given()
-                .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + jwtToken)
-                .body(ticketPayload)
+                .contentType(ContentType.JSON)
                 .when()
-                .post("/tickets");
+                .get("/auth/authenticate");
 
         response.then()
                 .statusCode(200)
-                .body("subject", equalTo(TICKET_SUBJECT))
-                .body("id", notNullValue())
-                .body("userId", notNullValue());
+                .body("userId", notNullValue())
+                .body("roles", hasItem("user"));
+
+        if (userId == null) {
+            userId = response.jsonPath().getString("userId");
+        }
     }
+
+    @Test
+    @Order(4)
+    public void testGetUserById() {
+        if (userId == null) {
+            throw new IllegalStateException("User ID not available. Registration or authentication test might have failed.");
+        }
+
+        given()
+                .when()
+                .get("/users/" + userId)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(userId))
+                .body("username", equalTo(USERNAME))
+                .body("email", equalTo(EMAIL));
+    }
+
 }

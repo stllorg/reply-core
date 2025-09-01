@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.stll.reply.core.Entities.Message;
+import org.stll.reply.core.Entities.Ticket;
 import org.stll.reply.core.Repositories.MessageRepository;
 
 import java.util.List;
@@ -32,6 +33,11 @@ public class MessageService {
     // FIND ALL messages by ticket id
     public List<Message> getMessagesByTicketId(UUID ticketId) {
         return messageRepository.findAllMessagesByTicketId(ticketId);
+    }
+
+    // UPDATE message
+    public Optional<Message> updateMessage(Message message) {
+        return Optional.of(messageRepository.update(message));
     }
 
     // DELETE message by Id

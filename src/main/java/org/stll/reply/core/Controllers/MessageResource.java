@@ -2,6 +2,7 @@ package org.stll.reply.core.Controllers;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -10,9 +11,12 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.stll.reply.core.Entities.Message;
 import org.stll.reply.core.Services.MessageService;
 import org.stll.reply.core.dtos.CreateMessageRequest;
+import org.stll.reply.core.dtos.SaveMessageResponse;
+import org.stll.reply.core.dtos.UpdateMessageRequest;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Path("/messages")
@@ -64,6 +68,35 @@ public class MessageResource {
         }
     }
 
+    // UPDATE message
+    @PUT
+    @Path("/{id}")
+    public Response updateMessage(@PathParam("id") UUID id, UpdateMessageRequest request) {
+        Optional<Message> messageOptional = messageService.findMessageById(id);
+
+        if (messageOptional.isPresent()) {
+            Message messageToUpdate = messageOptional.get();
+            messageToUpdate.setMessage(request.message);
+
+           return messageService.updateMessage(messageToUpdate)
+                    .map(updatedMessage -> {
+
+                        SaveMessageResponse dto = new SaveMessageResponse(
+                                updatedMessage.getId(),
+                                updatedMessage.getMessage(),
+                                updatedMessage.getCreatedAt()
+                        );
+
+                        return Response.ok(dto).build();
+                            }
+                    )
+                    .orElse(Response.status(Response.Status.NOT_FOUND).build());
+
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    }
+
     // GET message by Id
     @GET
     @Path("/{id}")
@@ -84,7 +117,19 @@ public class MessageResource {
     // DELETE message by id
     @DELETE
     @Path("/{id}")
-    public boolean delete(@PathParam("id") UUID id) {
-        return messageService.delete(id);
+    public Response delete(@PathParam("id") UUID id) {
+        try {
+            boolean deleted = messageService.delete(id);
+
+            if (deleted) {
+                return Response.noContent().build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+        } catch (PersistenceException e) {
+        log.error("Failed to delete message with ID: " + id, e);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+
     }
 }
