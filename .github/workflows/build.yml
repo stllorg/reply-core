@@ -30,11 +30,8 @@ jobs:
 
       # 🔬 Step 4 : Tests
       - name: Use maven to run Quarkus tests with PostgreSQL service
-        run: ./mvnw test
+        run: ./mvnw test -Dquarkus.datasource.jdbc.url=${{ secrets.DATABASE_PUBLIC_URL }} -Dquarkus.datasource.username=${{ secrets.POSTGRES_USER }} -Dquarkus.datasource.password=${{ secrets.POSTGRES_PASSWORD }}
         env:
-          QUARKUS_DATASOURCE_JDBC_URL: ${{ secrets.DATABASE_PUBLIC_URL }}
-          QUARKUS_DATASOURCE_USERNAME: ${{ secrets.POSTGRES_USER }}
-          QUARKUS_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           # Configure JWT privateKey path
           SMALLRYE_JWT_SIGN_KEY_LOCATION: ./jwt/privateKey.pem
           # Configure JWT publicKey path
