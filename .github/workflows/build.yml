@@ -11,20 +11,6 @@ jobs:
   build-and-push-docker-image:
     runs-on: ubuntu-latest
 
-    # This defines temporary PostgreSQL database to be able to run tests with maven
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_DB: test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd "pg_isready -U postgres -d test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       # Check out the code
       - name: Checkout repository
@@ -42,60 +28,41 @@ jobs:
       - name: Generate JWT Public and Private Keys
         run: chmod +x ./generate_keys.sh && ./generate_keys.sh
 
-      # Step 4 : Configure PostgreSQL Client
-      - name: Install Postgres client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      # 🔍 Step 5 : Wait for the database initialization process to complete
-      - name: Wait for PostgreSQL
-        run: |
-          for i in {1..50}; do
-            if pg_isready -h postgres -p 5432 -U postgres -d test; then
-              echo "✅ Postgres is ready!"
-              exit 0
-            fi
-            echo "⏳ postgres:5432 - no response, retry $i/20"
-            sleep 3
-          done
-          echo "❌ Postgres did not become ready in time"
-          exit 1
-
-
-      # 🔬 Step 6 : Tests
+      # 🔬 Step 4 : Tests
       - name: Use maven to run Quarkus tests with PostgreSQL service
         run: ./mvnw test
         env:
-          QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/test
-          QUARKUS_DATASOURCE_USERNAME: postgres
-          QUARKUS_DATASOURCE_PASSWORD: postgres
+          QUARKUS_DATASOURCE_JDBC_URL: ${{ secrets.DATABASE_PUBLIC_URL }}
+          QUARKUS_DATASOURCE_USERNAME: ${{ secrets.POSTGRES_USER }}
+          QUARKUS_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           # Configure JWT privateKey path
           SMALLRYE_JWT_SIGN_KEY_LOCATION: ./jwt/privateKey.pem
           # Configure JWT publicKey path
           MP_JWT_VERIFY_PUBLICKEY_LOCATION: ./jwt/publicKey.pem
 
-      # 🚪 Step 7: Log in to Docker Hub using GitHub secrets
+      # 🚪 Step 5: Log in to Docker Hub using GitHub secrets
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      # 📟 Step 8: Build the Quarkus native executable with Maven
+      # 📟 Step 6: Build the Quarkus native executable with Maven
       - name: Build Quarkus Native Executable
         run: ./mvnw package -Pnative -Dquarkus.native.container-build=true
 
-      # 🏷️ Step 9: Define the Docker image tags
+      # 🏷️ Step 7: Define the Docker image tags
       - name: Get commit SHA as tag
         id: commit_sha
         run: echo "TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
-      # ⚒️ Step 10: Build the Docker image from the native executable
+      # ⚒️ Step 8: Build the Docker image from the native executable
       - name: Build Docker image
         run: |
           docker build -f src/main/docker/Dockerfile.native -t stllorg/reply-core .
           docker tag stllorg/reply-core:latest stllorg/reply-core:${{ steps.commit_sha.outputs.TAG }}
 
-      # 🚀 Step 11: Push the newly built Docker image to Docker Hub
+      # 🚀 Step 9: Push the newly built Docker image to Docker Hub
       - name: Push Docker image
         run: |
           docker push stllorg/reply-core:latest
