@@ -44,15 +44,26 @@ jobs:
       - name: Generate JWT Public and Private Keys
         run: chmod +x ./generate_keys.sh && ./generate_keys.sh
 
+      # 🔍 Step 4 : Wait for the database initialization process to complete
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..20}; do
+            if pg_isready -h postgres -p 5432 -U postgres -d test; then
+              echo "Postgres is ready!"
+              break
+            fi
+            echo "Waiting for postgres..."
+            sleep 3
+          done
+
+
       # 🔬 Step 4 : Tests
       - name: Use maven to run Quarkus tests with PostgreSQL service
         run: ./mvnw test
         env:
-          # Override the database URL to point to the service container
           QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/test
           QUARKUS_DATASOURCE_USERNAME: postgres
           QUARKUS_DATASOURCE_PASSWORD: postgres
-          QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: drop-and-create
           # Configure JWT privateKey path
           SMALLRYE_JWT_SIGN_KEY_LOCATION: ./jwt/privateKey.pem
           # Configure JWT publicKey path
