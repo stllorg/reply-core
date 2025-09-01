@@ -4,12 +4,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.InternalServerErrorException;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Message;
 import org.stll.reply.core.Entities.Ticket;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @ApplicationScoped
@@ -22,31 +24,26 @@ public class MessageRepository {
     public Message save(Message message) {
         log.info("MessageRepository : Trying to save new message from user id: " + message.getUserId());
 
-        em.createNativeQuery(
-                        "INSERT INTO ticket_messages (ticket_id, user_id, message) VALUES (?, ?, ?)"
-                )
-                .setParameter(1, message.getTicketId())
-                .setParameter(2, message.getUserId())
-                .setParameter(3, message.getMessage())
-                .executeUpdate();
+        Query query = em.createNativeQuery(
+                        "INSERT INTO ticket_messages (ticket_id, user_id, message) VALUES (?, ?, ?) RETURNING id, message, created_at"
+                );
+                query.setParameter(1, message.getTicketId());
+                query.setParameter(2, message.getUserId());
+                query.setParameter(3, message.getMessage());
 
-        // Retrieve the ID from the saved message.
-        //   Search messages by User UUID
-        //   Return id of most recent message found
-        // Optional<UUID> savedMessageId = findIdOfLastMessageCreatedByUserId(message.getUserId());
-        // savedMessageId.ifPresent(message::setId);
-        log.info("MessageRepository: Successfully saved message! Trying to retrieve message id");
+        Object[] result = (Object[]) query.getSingleResult();
 
+        UUID generatedId = (UUID) result[0];
+        String messageContent = (String) result[1];
+        LocalDateTime createdAt = (LocalDateTime) result[2];
 
-        try {
-            // Retrieve the saved message
-            Optional<Message> savedMessage = findLastMessageCreatedByUserId(message.getUserId());
-            log.info("MessageRepository: Retrieving saved message ID" + savedMessage.get().getId());
-            return savedMessage.get();
-        } catch (NoSuchElementException e){
-            log.error("MessageRepository: Failed to retrieve saved message ID");
-            throw new InternalServerErrorException("Failed to retrieve the saved message.");
-        }
+        message.setId(generatedId);
+        message.setMessage(messageContent);
+        message.setCreatedAt(createdAt);
+
+        log.info("MessageRepository: Successfully saved message with ID : " + message.getId());
+
+        return message;
     }
 
     @Transactional
