@@ -11,6 +11,6 @@ import java.util.UUID;
 @RegisterForReflection
 public class SaveTicketResponse {
     public String subject;
-    public UUID ticketId;
+    public UUID id;
     public UUID userId;
 }
