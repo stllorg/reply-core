@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MessageE2ETest {
 
-    private static final String USERNAME = "testuser_e2e_" + UUID.randomUUID().toString().substring(0, 8);
+    private static final String USERNAME = "m_e2e_" + UUID.randomUUID().toString().substring(0, 8);
     private static final String EMAIL = USERNAME + "@test.com";
     private static final String PASSWORD = "TestPassword123!";
     private static final String TICKET_SUBJECT = "The Ticket for E2E test.";
@@ -82,7 +82,7 @@ public class MessageE2ETest {
                 .post("/tickets");
 
         response.then()
-                .statusCode(200)
+                .statusCode(201)
                 .body("subject", equalTo(TICKET_SUBJECT))
                 .body("id", notNullValue())
                 .body("userId", notNullValue());
@@ -111,7 +111,7 @@ public class MessageE2ETest {
                 .post("/messages/" + createdTicketId);
 
         response.then()
-                .statusCode(200)
+                .statusCode(201)
                 .body("message", equalTo(MESSAGE_CONTENT))
                 .body("id", notNullValue())
                 .body("userId", notNullValue())
