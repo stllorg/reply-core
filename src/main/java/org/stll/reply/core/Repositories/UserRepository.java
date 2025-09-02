@@ -5,16 +5,17 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
+import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Role;
 import org.stll.reply.core.Entities.User;
 import org.stll.reply.core.dtos.PaginationResponse;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
+@JBossLog
 public class UserRepository {
 
     @Inject
@@ -38,19 +39,32 @@ public class UserRepository {
     }
 
     @Transactional
-    public int update(User user) {
-        return em.createNativeQuery(
-                        "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?"
-                )
-                .setParameter(1, user.getUsername())
-                .setParameter(2, user.getEmail())
-                .setParameter(3, user.getPassword())
-                .setParameter(4, user.getId())
-                .executeUpdate();
+    public Optional<User> update(User user) {
+        int rowsAffected = em.createNativeQuery(
+                            "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?"
+                    )
+                    .setParameter(1, user.getUsername())
+                    .setParameter(2, user.getEmail())
+                    .setParameter(3, user.getPassword())
+                    .setParameter(4, user.getId())
+                    .executeUpdate();
+
+        User updatedUser = em.find(User.class, user.getId());
+        if (rowsAffected > 0 ) {
+            return Optional.of(updatedUser);
+        }
+
+        return Optional.empty();
     }
 
     @Transactional
     public boolean deleteById(UUID id) {
+
+        // Remove user from user_roles table
+        em.createNativeQuery("DELETE FROM user_roles WHERE user_id = ?")
+                .setParameter(1, id)
+                .executeUpdate();
+
         int rowsAffected =  em.createNativeQuery("DELETE FROM users WHERE id = ?")
                 .setParameter(1, id)
                 .executeUpdate();
@@ -97,35 +111,32 @@ public class UserRepository {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public PaginationResponse<User> findAll(int page, int limit) {
         int offset = (page - 1) * limit;
 
-        // 1. Query para contar o total de usuários
+        // 1. Query to count total number of users
         long totalUsers = (long) em.createNativeQuery("SELECT COUNT(*) FROM users")
                 .getSingleResult();
 
-        // 2. Query para buscar os usuários da página com LIMIT e OFFSET
-        List<User> users;
-        try {
-            users = em.createNativeQuery(
+        // 2. Query to find users of given page based on LIMIT and OFFSET
+        List<User> users  = (List<User>) em.createNativeQuery(
                             "SELECT id, username, email FROM users ORDER BY id ASC LIMIT ? OFFSET ?", User.class
                     )
                     .setParameter(1, limit)
                     .setParameter(2, offset)
                     .getResultList();
-        } catch (jakarta.persistence.NoResultException e) {
-            users = Collections.emptyList();
-        }
 
-        // 3. Monta o objeto de paginação
+
+        // 3. Build the Pagination Object
         long totalPages = (long) Math.ceil((double) totalUsers / limit);
 
         return new PaginationResponse<>(users, page, limit, totalUsers, totalPages);
     }
 
-    @SuppressWarnings("unchecked") // Suppress warning for unchecked cast from getResultList()
+    @SuppressWarnings("unchecked")
     public List<Role> findRolesByUserId(UUID userId) {
-        return em.createNativeQuery(
+        return (List<Role>) em.createNativeQuery(
                         "SELECT r.id, r.name FROM roles r JOIN user_roles ur ON r.id = ur.role_id WHERE ur.user_id = ?", Role.class
                 )
                 .setParameter(1, userId)
