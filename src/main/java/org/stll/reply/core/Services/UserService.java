@@ -82,6 +82,10 @@ public class UserService {
         return userRepository.findAll(page, limit);
     }
 
+    public Optional<User> update(User user) {
+        return userRepository.update(user);
+    }
+
     public boolean delete(UUID id) {
         return userRepository.deleteById(id);
     }
@@ -120,8 +124,7 @@ public class UserService {
     public boolean deleteAllUserRoles(UUID userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isPresent()) {
-            userRepository.deleteRolesByUserId(userId);
-            return true;
+            return userRepository.deleteRolesByUserId(userId);
         }
         return false;
     }

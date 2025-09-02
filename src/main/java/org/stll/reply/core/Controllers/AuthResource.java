@@ -79,7 +79,9 @@ public class AuthResource {
             if (token.isPresent()) {
                 return Response.ok().entity(new LoginResponse(true, "Login successful", token.get())).build();
             } else {
-                throw new IllegalArgumentException("Invalid credentials");
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(new LoginResponse(false, "Invalid credentials", null))
+                        .build();
             }
         } catch (RuntimeException e) {
             return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();

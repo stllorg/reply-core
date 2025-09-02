@@ -38,6 +38,10 @@ jobs:
       # 📟 Step 5: Build the Quarkus native executable with Maven
       - name: Build Quarkus Native Executable
         run: ./mvnw package -Pnative -Dquarkus.native.container-build=true
+        env:
+          DB_USERNAME: ${{ secrets.TEST_DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          DB_URL: ${{ secrets.TEST_DB_URL }}
 
       # 🏷️ Step 6: Define the Docker image tags
       - name: Get commit SHA as tag

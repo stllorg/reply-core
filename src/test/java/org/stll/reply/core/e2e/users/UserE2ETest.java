@@ -21,6 +21,10 @@ public class UserE2ETest {
     private static final String EMAIL = USERNAME + "@test.com";
     private static final String PASSWORD = "TestPassword123!";
 
+    private static final String NEW_PASSWORD = "NewPassword123!";
+    private static final String NEW_EMAIL = "new_" + EMAIL;
+    private static final String NEW_USERNAME = "new_" + USERNAME;
+
     private static String jwtToken;
     private static String userId;
 
@@ -98,6 +102,96 @@ public class UserE2ETest {
                 .body("id", equalTo(userId))
                 .body("username", equalTo(USERNAME))
                 .body("email", equalTo(EMAIL));
+    }
+
+    @Test
+    @Order(5)
+    public void testUpdateUserPassword() {
+        String passwordPayload = "{\"password\":\"" + NEW_PASSWORD + "\"}";
+
+        given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType(ContentType.JSON)
+                .body(passwordPayload)
+                .when()
+                .put("/users/" + userId + "/password")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    @Order(6)
+    public void testUpdateUserEmail() {
+        String emailPayload = "{\"email\":\"" + NEW_EMAIL + "\"}";
+
+        given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType(ContentType.JSON)
+                .body(emailPayload)
+                .when()
+                .put("/users/" + userId + "/email")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    @Order(7)
+    public void testUpdateUserUsername() {
+        String usernamePayload = "{\"username\":\"" + NEW_USERNAME + "\"}";
+
+        given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType(ContentType.JSON)
+                .body(usernamePayload)
+                .when()
+                .put("/users/" + userId + "/username")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    @Order(8)
+    public void testFetchUserRoles() {
+        if (userId == null) {
+            throw new IllegalStateException("User ID not available.");
+        }
+
+        given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .when()
+                .get("/users/" + userId + "/roles")
+                .then()
+                .statusCode(200)
+                .body("roles", hasItem("user"));
+    }
+
+    @Test
+    @Order(9)
+    public void testDeleteUserAccount() {
+        if (userId == null) {
+            throw new IllegalStateException("User ID not available.");
+        }
+
+        given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .when()
+                .delete("/users/" + userId)
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    @Order(10)
+    public void testGetDeletedUserFails() {
+        if (userId == null) {
+            throw new IllegalStateException("User ID not available. Deletion test might have failed.");
+        }
+
+        given()
+                .when()
+                .get("/users/" + userId)
+                .then()
+                .statusCode(404);
     }
 
 }
