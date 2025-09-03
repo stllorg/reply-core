@@ -176,16 +176,153 @@ The response was:
 --------
 
 
-As an administrator
-- I want to create a new account
-    POST - /users - createUser
+# As an administrator
 
-- I want to fetch all users
-    GET - /users - fetchUsers
+## 1. I've logged in with default password Senha1234 
+```bash
+curl -X 'POST' \
+  'http://localhost:8080/auth/login' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "username": "admin",
+  "password": "Senha1234"
+}'
 
-- I want to update a user's roles
-    PUT - /users/{targetId}/roles - updateUserRole
+```
 
-As a developer
-- I want an account with all the roles functions
-    PUT - /users/me/upgrade/roles - upgradeUserRoles
+The response was
+```JSON
+{
+  "success": true,
+  "message": "Login successful",
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJyZXBseS1jb3JlIiwidXBuIjoiYWRtaW4iLCJncm91cHMiOlsiYWRtaW4iXSwiaWQiOiJlZmIyZjRjMS1iZjMxLTQ5OTUtODUzZC03Y2Q1MDI2ZTdiNDciLCJleHAiOjE3NTY5MDgzNTQwNTYsImlhdCI6MTc1NjkwODM1MCwianRpIjoiNjFiM2E3MmItYmZiMy00YTk3LWI4NzItZjgzOTllNmExODM4In0.UyR-A6G7DVvOpsCC2arTVv8aNGjCJr2NLgterVcFcxkaLKY2V5oKdCAnSrI84I7kk-Zvs1JQ39NLXwhMn_H-D0vupb4pRIMnkRSuhZrVka7UoOHQOOq5tZvlmV0nutDKeVtwZ1tW9DqVB63aECR5KDYUJX9PHri1CJqVMRHICSaLDB-8X4OsaQp8Kelq5PCk74dooOX-0nYu6W9129k6PS63rZF16f5DTC0pdnraeS2z4n6wyOHfsk1lXG3FhN_mDEXj92icKucGrK_AwS4w0xXm7TodD2Svvt4SGWxbGkuBROTuVSmCzNWPU39J3aD0wHGE--RNLtcYBqdqqJSZHA"
+}
+```
+
+## 2.5. I've fetched my user information with
+
+```bash
+
+curl -X 'GET' \
+  'http://localhost:8080/auth/authenticate' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJyZXBseS1jb3JlIiwidXBuIjoiYWRtaW4iLCJncm91cHMiOlsiYWRtaW4iXSwiaWQiOiJlZmIyZjRjMS1iZjMxLTQ5OTUtODUzZC03Y2Q1MDI2ZTdiNDciLCJleHAiOjE3NTY5MDgzNTQwNTYsImlhdCI6MTc1NjkwODM1MCwianRpIjoiNjFiM2E3MmItYmZiMy00YTk3LWI4NzItZjgzOTllNmExODM4In0.UyR-A6G7DVvOpsCC2arTVv8aNGjCJr2NLgterVcFcxkaLKY2V5oKdCAnSrI84I7kk-Zvs1JQ39NLXwhMn_H-D0vupb4pRIMnkRSuhZrVka7UoOHQOOq5tZvlmV0nutDKeVtwZ1tW9DqVB63aECR5KDYUJX9PHri1CJqVMRHICSaLDB-8X4OsaQp8Kelq5PCk74dooOX-0nYu6W9129k6PS63rZF16f5DTC0pdnraeS2z4n6wyOHfsk1lXG3FhN_mDEXj92icKucGrK_AwS4w0xXm7TodD2Svvt4SGWxbGkuBROTuVSmCzNWPU39J3aD0wHGE--RNLtcYBqdqqJSZHA'
+```
+
+The response was
+```JSON
+{
+  "userId": "efb2f4c1-bf31-4995-853d-7cd5026e7b47",
+  "roles": [
+    "admin"
+  ]
+}
+```
+
+## 3. I've fetched all users with
+```bash
+curl -X 'GET' \
+  'http://localhost:8080/users?limit=15&page=1' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJyZXBseS1jb3JlIiwidXBuIjoiYWRtaW4iLCJncm91cHMiOlsiYWRtaW4iXSwiaWQiOiJlZmIyZjRjMS1iZjMxLTQ5OTUtODUzZC03Y2Q1MDI2ZTdiNDciLCJleHAiOjE3NTY5MDgzNTQwNTYsImlhdCI6MTc1NjkwODM1MCwianRpIjoiNjFiM2E3MmItYmZiMy00YTk3LWI4NzItZjgzOTllNmExODM4In0.UyR-A6G7DVvOpsCC2arTVv8aNGjCJr2NLgterVcFcxkaLKY2V5oKdCAnSrI84I7kk-Zvs1JQ39NLXwhMn_H-D0vupb4pRIMnkRSuhZrVka7UoOHQOOq5tZvlmV0nutDKeVtwZ1tW9DqVB63aECR5KDYUJX9PHri1CJqVMRHICSaLDB-8X4OsaQp8Kelq5PCk74dooOX-0nYu6W9129k6PS63rZF16f5DTC0pdnraeS2z4n6wyOHfsk1lXG3FhN_mDEXj92icKucGrK_AwS4w0xXm7TodD2Svvt4SGWxbGkuBROTuVSmCzNWPU39J3aD0wHGE--RNLtcYBqdqqJSZHA'
+```
+
+The response was:
+```JSON
+{
+  "data": [
+    {
+      "id": "6a4c8777-fc25-4098-8f84-bc08ae8c46e6",
+      "username": "newuser",
+      "email": "newuser@email.com"
+    },
+    {
+      "id": "b1d5cfe9-8348-4aa1-97da-e327b755090e",
+      "username": "manager",
+      "email": "manager@email.com"
+    },
+    {
+      "id": "cb764263-94de-430e-98b8-231a813366af",
+      "username": "support",
+      "email": "support@email.com"
+    },
+    {
+      "id": "efb2f4c1-bf31-4995-853d-7cd5026e7b47",
+      "username": "admin",
+      "email": "adm@testmail.com"
+    }
+  ],
+  "currentPage": 1,
+  "perPage": 15,
+  "totalItems": 4,
+  "totalPages": 1
+}
+```
+The correct response is a list that is not empty
+
+
+## 4. I've created a new user account with
+
+```bash
+curl -X 'POST' \
+  'http://localhost:8080/users' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJyZXBseS1jb3JlIiwidXBuIjoiYWRtaW4iLCJncm91cHMiOlsiYWRtaW4iXSwiaWQiOiJlZmIyZjRjMS1iZjMxLTQ5OTUtODUzZC03Y2Q1MDI2ZTdiNDciLCJleHAiOjE3NTY5MDgzNTQwNTYsImlhdCI6MTc1NjkwODM1MCwianRpIjoiNjFiM2E3MmItYmZiMy00YTk3LWI4NzItZjgzOTllNmExODM4In0.UyR-A6G7DVvOpsCC2arTVv8aNGjCJr2NLgterVcFcxkaLKY2V5oKdCAnSrI84I7kk-Zvs1JQ39NLXwhMn_H-D0vupb4pRIMnkRSuhZrVka7UoOHQOOq5tZvlmV0nutDKeVtwZ1tW9DqVB63aECR5KDYUJX9PHri1CJqVMRHICSaLDB-8X4OsaQp8Kelq5PCk74dooOX-0nYu6W9129k6PS63rZF16f5DTC0pdnraeS2z4n6wyOHfsk1lXG3FhN_mDEXj92icKucGrK_AwS4w0xXm7TodD2Svvt4SGWxbGkuBROTuVSmCzNWPU39J3aD0wHGE--RNLtcYBqdqqJSZHA' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "username": "createduser1",
+  "email": "createduser1@email.com",
+  "password": "Senha1234"
+}'
+```
+
+The response was
+```JSON
+{
+  "id": "47143f51-6a9f-4cc3-b3cd-eeba6ee29c8c",
+  "username": "createduser1",
+  "email": "createduser1@email.com"
+}
+```
+
+## 5. I've updated the roles of the user I've just created
+```bash
+curl -X 'PUT' \
+  'http://localhost:8080/users/47143f51-6a9f-4cc3-b3cd-eeba6ee29c8c/roles' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJyZXBseS1jb3JlIiwidXBuIjoiYWRtaW4iLCJncm91cHMiOlsiYWRtaW4iXSwiaWQiOiJlZmIyZjRjMS1iZjMxLTQ5OTUtODUzZC03Y2Q1MDI2ZTdiNDciLCJleHAiOjE3NTY5MDgzNTQwNTYsImlhdCI6MTc1NjkwODM1MCwianRpIjoiNjFiM2E3MmItYmZiMy00YTk3LWI4NzItZjgzOTllNmExODM4In0.UyR-A6G7DVvOpsCC2arTVv8aNGjCJr2NLgterVcFcxkaLKY2V5oKdCAnSrI84I7kk-Zvs1JQ39NLXwhMn_H-D0vupb4pRIMnkRSuhZrVka7UoOHQOOq5tZvlmV0nutDKeVtwZ1tW9DqVB63aECR5KDYUJX9PHri1CJqVMRHICSaLDB-8X4OsaQp8Kelq5PCk74dooOX-0nYu6W9129k6PS63rZF16f5DTC0pdnraeS2z4n6wyOHfsk1lXG3FhN_mDEXj92icKucGrK_AwS4w0xXm7TodD2Svvt4SGWxbGkuBROTuVSmCzNWPU39J3aD0wHGE--RNLtcYBqdqqJSZHA' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "roleNames": [
+    "manager",
+    "support",
+    "user"
+  ]
+}'
+```
+
+The response was:
+
+204 no content
+
+
+## 6. I've checked the user roles of the user who I've updated his roles
+
+```bash
+curl -X 'GET' \
+  'http://localhost:8080/users/47143f51-6a9f-4cc3-b3cd-eeba6ee29c8c/roles' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJyZXBseS1jb3JlIiwidXBuIjoiYWRtaW4iLCJncm91cHMiOlsiYWRtaW4iXSwiaWQiOiJlZmIyZjRjMS1iZjMxLTQ5OTUtODUzZC03Y2Q1MDI2ZTdiNDciLCJleHAiOjE3NTY5MDgzNTQwNTYsImlhdCI6MTc1NjkwODM1MCwianRpIjoiNjFiM2E3MmItYmZiMy00YTk3LWI4NzItZjgzOTllNmExODM4In0.UyR-A6G7DVvOpsCC2arTVv8aNGjCJr2NLgterVcFcxkaLKY2V5oKdCAnSrI84I7kk-Zvs1JQ39NLXwhMn_H-D0vupb4pRIMnkRSuhZrVka7UoOHQOOq5tZvlmV0nutDKeVtwZ1tW9DqVB63aECR5KDYUJX9PHri1CJqVMRHICSaLDB-8X4OsaQp8Kelq5PCk74dooOX-0nYu6W9129k6PS63rZF16f5DTC0pdnraeS2z4n6wyOHfsk1lXG3FhN_mDEXj92icKucGrK_AwS4w0xXm7TodD2Svvt4SGWxbGkuBROTuVSmCzNWPU39J3aD0wHGE--RNLtcYBqdqqJSZHA'
+```
+
+
+```JSON
+{
+  "roles": [
+    "manager",
+    "support",
+    "user"
+  ]
+}
+```

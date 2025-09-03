@@ -5,13 +5,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityExistsException;
 import lombok.extern.jbosslog.JBossLog;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.stll.reply.core.Entities.User;
 import org.stll.reply.core.dtos.LoginRequest;
 import org.stll.reply.core.utils.PasswordEncoder;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
@@ -86,7 +83,7 @@ public class AuthService {
             String[] roles = userService.getUserRolesByUserId(user.getId());
             Set<String> rolesSet = Arrays.stream(roles).collect(Collectors.toSet());
 
-            log.info("AuthService: Trying to genereate a new signed JWT Token");
+            log.info("AuthService: Trying to generate a new signed JWT Token");
             String currentUsername = user.getUsername();
             String userIdString = "User id " + user.getId();
             log.info("AuthService: Starting to generate token for user" + currentUsername);

@@ -9,6 +9,7 @@ import org.stll.reply.core.Entities.Role;
 import org.stll.reply.core.Entities.User;
 import org.stll.reply.core.Repositories.UserRepository;
 import org.stll.reply.core.dtos.PaginationResponse;
+import org.stll.reply.core.dtos.UserDTO;
 import org.stll.reply.core.utils.PasswordEncoder;
 
 import java.util.List;
@@ -42,7 +43,7 @@ public class UserService {
         log.info("UserService - Received email from user {}" + user.getEmail());
         createUser(user);
 
-        log.info("UserService - Sucesscfully created user with email: " + user.getEmail());
+        log.info("UserService - Successfully created user with email: " + user.getEmail());
         return user;
     }
 
@@ -50,10 +51,10 @@ public class UserService {
     public User createUser(User user) {
         // Validate if username or email already exists
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Username already exists: " + user.getUsername());
+            throw new EntityExistsException("Username already exists: " + user.getUsername());
         }
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
+            throw new EntityExistsException("Email already exists: " + user.getEmail());
         }
 
         // Save the user
@@ -78,11 +79,20 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public PaginationResponse<User> getUsers(int page, int limit) {
+    public PaginationResponse<UserDTO> getUsers(int page, int limit) {
         return userRepository.findAll(page, limit);
     }
 
     public Optional<User> update(User user) {
+        return update(user, false);
+    }
+
+    public Optional<User> update(User user, boolean isPasswordChange) {
+        if (isPasswordChange) {
+            String hashedPassword = passwordEncoder.hashPassword(user.getPassword());
+            user.setPassword(hashedPassword);
+        }
+
         return userRepository.update(user);
     }
 

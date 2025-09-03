@@ -1,9 +1,9 @@
 INSERT INTO users (username, email, password)
 VALUES
-    ('admin', 'adm@testmail.com', '$2y$12$7WxeGPCKKc/w5ZrR4I/YjeoJ0p2AyjbjCsYt/Y6ygHo9phOWd0ZsO'),
-    ('manager', 'manager@email.com', '$2y$12$7WxeGPCKKc/w5ZrR4I/YjeoJ0p2AyjbjCsYt/Y6ygHo9phOWd0ZsO'),
-    ('support', 'support@email.com', '$2y$12$7WxeGPCKKc/w5ZrR4I/YjeoJ0p2AyjbjCsYt/Y6ygHo9phOWd0ZsO'),
-    ('newuser', 'newuser@email.com', '$2y$12$7WxeGPCKKc/w5ZrR4I/YjeoJ0p2AyjbjCsYt/Y6ygHo9phOWd0ZsO');
+    ('admin', 'adm@testmail.com', '$2a$10$/OuTiU54L7Ns.ZWgOrbLdudeBNxo5dEipZzRV41RRxTb0pQmu29iS'),
+    ('manager', 'manager@email.com', '$2a$10$/OuTiU54L7Ns.ZWgOrbLdudeBNxo5dEipZzRV41RRxTb0pQmu29iS'),
+    ('support', 'support@email.com', '$2a$10$/OuTiU54L7Ns.ZWgOrbLdudeBNxo5dEipZzRV41RRxTb0pQmu29iS'),
+    ('newuser', 'newuser@email.com', '$2a$10$/OuTiU54L7Ns.ZWgOrbLdudeBNxo5dEipZzRV41RRxTb0pQmu29iS');
 
 INSERT INTO roles (name)
 VALUES

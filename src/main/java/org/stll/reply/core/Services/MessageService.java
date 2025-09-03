@@ -4,7 +4,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.stll.reply.core.Entities.Message;
-import org.stll.reply.core.Entities.Ticket;
 import org.stll.reply.core.Repositories.MessageRepository;
 
 import java.util.List;
@@ -40,7 +39,7 @@ public class MessageService {
         return Optional.of(messageRepository.update(message));
     }
 
-    // DELETE message by Id
+    // DELETE message by id
     public boolean delete(UUID id) {
         return messageRepository.deleteById(id);
     }

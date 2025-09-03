@@ -9,7 +9,9 @@ import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Role;
 import org.stll.reply.core.Entities.User;
 import org.stll.reply.core.dtos.PaginationResponse;
+import org.stll.reply.core.dtos.UserDTO;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -112,7 +114,7 @@ public class UserRepository {
     }
 
     @SuppressWarnings("unchecked")
-    public PaginationResponse<User> findAll(int page, int limit) {
+    public PaginationResponse<UserDTO> findAll(int page, int limit) {
         int offset = (page - 1) * limit;
 
         // 1. Query to count total number of users
@@ -120,8 +122,8 @@ public class UserRepository {
                 .getSingleResult();
 
         // 2. Query to find users of given page based on LIMIT and OFFSET
-        List<User> users  = (List<User>) em.createNativeQuery(
-                            "SELECT id, username, email FROM users ORDER BY id ASC LIMIT ? OFFSET ?", User.class
+        List<UserDTO> users  = (List<UserDTO>) em.createNativeQuery(
+                            "SELECT id, username, email FROM users ORDER BY id ASC LIMIT ? OFFSET ?", UserDTO.class
                     )
                     .setParameter(1, limit)
                     .setParameter(2, offset)
@@ -154,9 +156,37 @@ public class UserRepository {
     }
 
     @Transactional
-    public void updateUserRoles(UUID userId, List<Integer> rolesIds) {
+    public void updateUserRoles(UUID userId, List<Integer> updatedRolesIds) {
 
-        for (Integer roleId : rolesIds) {
+        // 1. Get the current roles assigned to the user
+        List<Integer> currentRolesIds = em.createNativeQuery(
+                        "SELECT role_id FROM user_roles WHERE user_id = ?",
+                        Integer.class
+                )
+                .setParameter(1, userId)
+                .getResultList();
+
+        // 2. Determine roles to remove
+        List<Integer> rolesIdsToRemove = new ArrayList<>(currentRolesIds);
+        rolesIdsToRemove.removeAll(updatedRolesIds);
+
+        // 3. Determine roles to insert
+        List<Integer> rolesIdsToInsert = new ArrayList<>(updatedRolesIds);
+        rolesIdsToInsert.removeAll(currentRolesIds);
+
+        // 4. Delete roles that are no longer assigned
+        if (!rolesIdsToRemove.isEmpty()) {
+            em.createNativeQuery(
+                            "DELETE FROM user_roles WHERE user_id = ? AND role_id IN (:roles)"
+                    )
+                    .setParameter(1, userId)
+                    .setParameter("roles", rolesIdsToRemove)
+                    .executeUpdate();
+        }
+
+
+        // 5. Insert only rolesIdsToInsert
+        for (Integer roleId : rolesIdsToInsert) {
             em.createNativeQuery(
                             "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)"
                     )

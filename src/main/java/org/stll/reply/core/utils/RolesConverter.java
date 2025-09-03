@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class RolesConverter {
     
-    // map lista of RoleNames To list of Ids
+    // Map Names to ids
     public List<Integer> execute(List<String> roleNames) {
         return roleNames.stream().map(role -> {
             switch (role.toLowerCase()) {

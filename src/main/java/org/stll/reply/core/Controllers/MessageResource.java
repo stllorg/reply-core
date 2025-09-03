@@ -97,7 +97,7 @@ public class MessageResource {
         }
     }
 
-    // GET message by Id
+    // GET message by id
     @GET
     @Path("/{id}")
     public Response getMessageById(@PathParam("id") UUID id) {
@@ -106,7 +106,7 @@ public class MessageResource {
                 .orElse(Response.status(Response.Status.NOT_FOUND).build());
     }
 
-    // GET Messages BY Ticket Id
+    // GET Messages BY Ticket id
     @GET
     @Path("/ticket/{ticketId}")
     public Response getMessagesByTicketId(@PathParam("ticketId") UUID ticketId) {

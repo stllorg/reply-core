@@ -96,6 +96,7 @@ public class UserE2ETest {
 
         given()
                 .when()
+                .header("Authorization", "Bearer " + jwtToken)
                 .get("/users/" + userId)
                 .then()
                 .statusCode(200)
@@ -188,6 +189,7 @@ public class UserE2ETest {
         }
 
         given()
+                .header("Authorization", "Bearer " + jwtToken)
                 .when()
                 .get("/users/" + userId)
                 .then()

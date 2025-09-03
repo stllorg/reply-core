@@ -9,7 +9,6 @@ import jakarta.transaction.Transactional;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Ticket;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
