@@ -6,10 +6,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.InternalServerErrorException;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Message;
-import org.stll.reply.core.Entities.Ticket;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -74,21 +72,18 @@ public class MessageRepository {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public List<Message> findAllMessagesByTicketId(UUID ticketId) {
-        List<Message> messages;
-
         try {
-            messages = em.createNativeQuery(
-                            "SELECT id, ticket_id, message, created_at, user_id FROM ticket_messages WHERE ticket_id = ?"
+            return (List<Message>) em.createNativeQuery(
+                            "SELECT id, ticket_id, message, created_at, user_id FROM ticket_messages WHERE ticket_id = ?", Message.class
                     )
                     .setParameter(1, ticketId)
                     .getResultList();
 
         } catch (jakarta.persistence.NoResultException e) {
-            messages = Collections.emptyList();
+            return Collections.emptyList();
         }
-
-        return messages;
     }
 
     public Optional<UUID> findIdOfLastMessageCreatedByUserId(UUID userId) {
