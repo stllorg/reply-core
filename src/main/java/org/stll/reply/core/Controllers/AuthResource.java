@@ -3,6 +3,7 @@ package org.stll.reply.core.Controllers;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityExistsException;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -45,6 +46,8 @@ public class AuthResource {
             );
 
             return Response.created(URI.create("/users/" + userResponse.getId())).entity(userResponse).build();
+        } catch (EntityExistsException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
