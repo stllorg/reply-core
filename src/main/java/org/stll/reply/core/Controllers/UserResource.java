@@ -1,6 +1,5 @@
 package org.stll.reply.core.Controllers;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -73,7 +72,7 @@ public class UserResource {
             if (userId.equals(id)) {
                 log.info("AuthResource The user with id " + userId + " requested to get account info.");
             } else {
-                log.info("AuthResource The user with id " + userId + " has no admin rights to fetch thirdy user data.");
+                log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
                 return Response.status(Response.Status.FORBIDDEN).build();
             }
         }
@@ -104,9 +103,9 @@ public class UserResource {
             log.info("AuthResource The admin with id " + userId + "requested to delete user with id " + id);
         } else {
             if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " requestes to delete the account.");
+            log.info("AuthResource The user with id " + userId + " requested to delete the account.");
             } else {
-                log.info("AuthResource The user with id " + userId + " has no admin rights to delete thirdy user accounts.");
+                log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
                 return Response.status(Response.Status.FORBIDDEN).build();
             }
         }
@@ -129,9 +128,9 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " has requested to update the password.");
+            log.info("AuthResource The user with id " + userId + " requested to update the password.");
         } else {
-            log.info("AuthResource The user with id " + userId + " is forbidden to manage thirdy user's data.");
+            log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
@@ -147,7 +146,7 @@ public class UserResource {
             userToUpdate.setPassword(request.password);
 
             // Update user
-            return userService.update(userToUpdate)
+            return userService.update(userToUpdate, true)
                     .map(user -> Response.noContent().build())
                     .orElse(Response.status(Response.Status.NOT_FOUND).build());
         } else {
@@ -166,9 +165,9 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " has requested to update the email.");
+            log.info("AuthResource The user with id " + userId + " requested to update the email.");
         } else {
-            log.info("AuthResource The user with id " + userId + " is forbidden to manage thirdy user's data.");
+            log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
@@ -203,9 +202,9 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " has requested to update the username.");
+            log.info("AuthResource The user with id " + userId + " requested to update the username.");
         } else {
-            log.info("AuthResource The user with id " + userId + " is forbidden to manage thirdy user's data.");
+            log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
@@ -234,7 +233,7 @@ public class UserResource {
     @RolesAllowed("admin")
     public Response fetchUsers(@QueryParam("page") @DefaultValue("1") int page,
                                @QueryParam("limit") @DefaultValue("15") int limit) {
-        PaginationResponse<User> usersResult = userService.getUsers(page, limit);
+        PaginationResponse<UserDTO> usersResult = userService.getUsers(page, limit);
         if (usersResult.getData().isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).entity(Collections.singletonMap("error", "Users not found")).build();
         }
@@ -258,9 +257,9 @@ public class UserResource {
             log.info("AuthResource The admin with id " + userId + "requested to fetch roles of user with id " + targetId);
         } else {
             if (userId.equals(targetId)) {
-                log.info("AuthResource The user with id " + userId + " requestes to fetch account data of roles.");
+                log.info("AuthResource The user with id " + userId + " requested to fetch account data of roles.");
             } else {
-                log.info("AuthResource The user with id " + userId + " has no admin rights to fetch thirdy user accounts.");
+                log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
                 return Response.status(Response.Status.FORBIDDEN)
                         .entity(Collections.singletonMap("error", "You do not have permission to access this resource.")).build();
             }
@@ -280,6 +279,10 @@ public class UserResource {
     @Path("/{targetId}/roles")
     @RolesAllowed("admin")
     public Response updateUserRole(@PathParam("targetId") UUID targetId, RoleUpdateRequest request) {
+        String userIdString = jwt.getClaim("id").toString();
+        UUID userId = UUID.fromString(userIdString);
+        log.info("AuthResource The admin with id " + userId + " requested to update Roles of user with id " + targetId);
+
         if (request.getRoleNames() == null || request.getRoleNames().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity(Collections.singletonMap("error", "Missing roles value")).build();
         }
@@ -288,6 +291,8 @@ public class UserResource {
             if (targetUser.isEmpty()) {
                 return Response.status(Response.Status.NOT_FOUND).entity(Collections.singletonMap("error", "User not found")).build();
             }
+
+            log.info("AuthResource The admin wants to assign the following roles:\n" + request.getRoleNames().toString());
 
             // Convert request.roles from names to roleIds
             List<Integer> roleIdsList = rolesConverter.execute(request.getRoleNames());
@@ -299,41 +304,4 @@ public class UserResource {
             return Response.status(Response.Status.BAD_REQUEST).entity(Collections.singletonMap("error", "Failed to update user roles")).build();
         }
     }
-
-    @PUT
-    @Path("/me/upgrade/roles")
-    @RolesAllowed("user")
-    public Response upgradeUserRoles() {
-        // Check current user id
-        Set<String> roles = jwt.getGroups();
-        String currentUserIdString = jwt.getClaim("id").toString();
-        UUID currentUserId = UUID.fromString(currentUserIdString);
-
-        try {
-            Optional<User> targetUser = userService.findUserById(currentUserId);
-            if (targetUser.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND).entity(Collections.singletonMap("error", "User not found")).build();
-            }
-
-            List<String> requiredRoles = List.of("admin", "manager", "support");
-
-            List<String> newRolesToAdd = requiredRoles.stream()
-                    .filter(role -> !roles.contains(role))
-                    .collect(Collectors.toList());
-
-            if (newRolesToAdd.isEmpty()) {
-                return Response.status(Response.Status.CONFLICT).entity(Collections.singletonMap("error", "The user has all roles")).build();
-            }
-
-            // Convert roles from names to ids
-            List<Integer> roleIdsList = rolesConverter.execute(newRolesToAdd);
-
-            userService.updateUserRoles(currentUserId, roleIdsList);
-
-            return Response.noContent().build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(Collections.singletonMap("error", "Failed to update user roles")).build();
-        }
-    }
-
 }
