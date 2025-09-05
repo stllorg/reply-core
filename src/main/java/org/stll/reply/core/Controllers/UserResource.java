@@ -16,7 +16,6 @@ import org.stll.reply.core.utils.RolesConverter;
 
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Path("/users")
 @Produces(MediaType.APPLICATION_JSON)
@@ -67,12 +66,12 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (roles.contains("admin")) {
-            log.info("AuthResource The admin with id " + userId + "requested to delete user with id " + id);
+            log.info("UserResource The admin with id " + userId + "requested to delete user with id " + id);
         } else {
             if (userId.equals(id)) {
-                log.info("AuthResource The user with id " + userId + " requested to get account info.");
+                log.info("UserResource The user with id " + userId + " requested to get account info.");
             } else {
-                log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
+                log.info("UserResource The user with id " + userId + " has no rights to manage third party data.");
                 return Response.status(Response.Status.FORBIDDEN).build();
             }
         }
@@ -100,12 +99,12 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (roles.contains("admin")) {
-            log.info("AuthResource The admin with id " + userId + "requested to delete user with id " + id);
+            log.info("UserResource The admin with id " + userId + "requested to delete user with id " + id);
         } else {
             if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " requested to delete the account.");
+            log.info("UserResource The user with id " + userId + " requested to delete the account.");
             } else {
-                log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
+                log.info("UserResource The user with id " + userId + " has no rights to manage third party data.");
                 return Response.status(Response.Status.FORBIDDEN).build();
             }
         }
@@ -128,20 +127,20 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " requested to update the password.");
+            log.info("UserResource The user with id " + userId + " requested to update the password.");
         } else {
-            log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
+            log.info("UserResource The user with id " + userId + " has no rights to manage third party data.");
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
-        log.info("AuthResource UpdateUserPassword - Searching user by id.");
+        log.info("UserResource UpdateUserPassword - Searching user by id.");
 
         Optional<User> userOptional = userService.findUserById(id);
 
         if (userOptional.isPresent()) {
             User userToUpdate = userOptional.get();
 
-            log.info("AuthResource UpdateUserPassword - Found user with id:" + userToUpdate.getId());
+            log.info("UserResource UpdateUserPassword - Found user with id:" + userToUpdate.getId());
 
             userToUpdate.setPassword(request.password);
 
@@ -165,20 +164,20 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " requested to update the email.");
+            log.info("UserResource The user with id " + userId + " requested to update the email.");
         } else {
-            log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
+            log.info("UserResource The user with id " + userId + " has no rights to manage third party data.");
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
-        log.info("AuthResource UpdateUserEmail - Searching user by id.");
+        log.info("UserResource UpdateUserEmail - Searching user by id.");
 
         Optional<User> userOptional = userService.findUserById(id);
 
         if (userOptional.isPresent()) {
             User userToUpdate = userOptional.get();
 
-            log.info("AuthResource UpdateUserEmail - Found user with id:" + userToUpdate.getId());
+            log.info("UserResource UpdateUserEmail - Found user with id:" + userToUpdate.getId());
 
             userToUpdate.setPassword(request.email);
 
@@ -202,20 +201,20 @@ public class UserResource {
         UUID userId = UUID.fromString(userIdString);
 
         if (userId.equals(id)) {
-            log.info("AuthResource The user with id " + userId + " requested to update the username.");
+            log.info("UserResource The user with id " + userId + " requested to update the username.");
         } else {
-            log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
+            log.info("UserResource The user with id " + userId + " has no rights to manage third party data.");
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
-        log.info("AuthResource UpdateUserUsername - Searching user by id.");
+        log.info("UserResource UpdateUserUsername - Searching user by id.");
 
         Optional<User> userOptional = userService.findUserById(id);
 
         if (userOptional.isPresent()) {
             User userToUpdate = userOptional.get();
 
-            log.info("AuthResource UpdateUserUsername - Found user with id:" + userToUpdate.getId());
+            log.info("UserResource UpdateUserUsername - Found user with id:" + userToUpdate.getId());
 
             userToUpdate.setPassword(request.username);
 
@@ -254,12 +253,12 @@ public class UserResource {
         log.info("Current user " + userId + "\n target user:" + targetId);
 
         if (roles.contains("admin")) {
-            log.info("AuthResource The admin with id " + userId + "requested to fetch roles of user with id " + targetId);
+            log.info("UserResource The admin with id " + userId + "requested to fetch roles of user with id " + targetId);
         } else {
             if (userId.equals(targetId)) {
-                log.info("AuthResource The user with id " + userId + " requested to fetch account data of roles.");
+                log.info("UserResource The user with id " + userId + " requested to fetch account data of roles.");
             } else {
-                log.info("AuthResource The user with id " + userId + " has no rights to manage third party data.");
+                log.info("UserResource The user with id " + userId + " has no rights to manage third party data.");
                 return Response.status(Response.Status.FORBIDDEN)
                         .entity(Collections.singletonMap("error", "You do not have permission to access this resource.")).build();
             }
@@ -281,7 +280,7 @@ public class UserResource {
     public Response updateUserRole(@PathParam("targetId") UUID targetId, RoleUpdateRequest request) {
         String userIdString = jwt.getClaim("id").toString();
         UUID userId = UUID.fromString(userIdString);
-        log.info("AuthResource The admin with id " + userId + " requested to update Roles of user with id " + targetId);
+        log.info("UserResource The admin with id " + userId + " requested to update Roles of user with id " + targetId);
 
         if (request.getRoleNames() == null || request.getRoleNames().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity(Collections.singletonMap("error", "Missing roles value")).build();
@@ -292,7 +291,7 @@ public class UserResource {
                 return Response.status(Response.Status.NOT_FOUND).entity(Collections.singletonMap("error", "User not found")).build();
             }
 
-            log.info("AuthResource The admin wants to assign the following roles:\n" + request.getRoleNames().toString());
+            log.info("UserResource The admin wants to assign the following roles:\n" + request.getRoleNames().toString());
 
             // Convert request.roles from names to roleIds
             List<Integer> roleIdsList = rolesConverter.execute(request.getRoleNames());
