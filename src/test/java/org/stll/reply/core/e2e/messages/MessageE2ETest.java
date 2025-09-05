@@ -11,8 +11,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThan;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -167,6 +167,31 @@ public class MessageE2ETest {
 
     @Test
     @Order(7)
+    public void testFetchAllMessagesByTicketId() {
+        if (jwtToken == null) {
+            throw new IllegalStateException("JWT token not available. Login test might have failed.");
+        }
+
+        if (createdTicketId == null) {
+            throw new IllegalStateException("Ticket id was not found. Ticket creation tests might have failed.");
+        }
+        
+        given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/messages/ticket/" + createdTicketId + "?limit=15&page=1")
+                .then()
+                .statusCode(200)
+                .body("data", not(empty()))
+                .body("data.size()", greaterThan(0))
+                .body("totalItems", greaterThan(0))
+                .body("data[0].id", notNullValue())
+                .body("data[0].message", notNullValue());
+    }
+
+    @Test
+    @Order(8)
     public void testDeleteMessage() {
         if (jwtToken == null) {
             throw new IllegalStateException("JWT token not available. Login test might have failed.");
