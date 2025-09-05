@@ -11,11 +11,11 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.stll.reply.core.Entities.Message;
 import org.stll.reply.core.Services.MessageService;
 import org.stll.reply.core.dtos.CreateMessageRequest;
+import org.stll.reply.core.dtos.PaginationResponse;
 import org.stll.reply.core.dtos.SaveMessageResponse;
 import org.stll.reply.core.dtos.UpdateMessageRequest;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,6 +71,7 @@ public class MessageResource {
     // UPDATE message
     @PUT
     @Path("/{id}")
+    @RolesAllowed("user")
     public Response updateMessage(@PathParam("id") UUID id, UpdateMessageRequest request) {
         Optional<Message> messageOptional = messageService.findMessageById(id);
 
@@ -100,6 +101,7 @@ public class MessageResource {
     // GET message by id
     @GET
     @Path("/{id}")
+    @RolesAllowed({"user", "admin", "support", "manager"})
     public Response getMessageById(@PathParam("id") UUID id) {
         return messageService.findMessageById(id)
                 .map(ticket -> Response.ok(ticket).build())
@@ -109,14 +111,19 @@ public class MessageResource {
     // GET Messages BY Ticket id
     @GET
     @Path("/ticket/{ticketId}")
-    public Response getMessagesByTicketId(@PathParam("ticketId") UUID ticketId) {
-        List<Message> messages = messageService.getMessagesByTicketId(ticketId);
+    @RolesAllowed({"user", "admin", "support", "manager"})
+    public Response getMessagesByTicketId(@PathParam("ticketId") UUID ticketId,
+                                          @QueryParam("page") @DefaultValue("1") int page,
+                                          @QueryParam("limit") @DefaultValue("15") int limit) {
+
+        PaginationResponse<Message> messages = messageService.getMessagesByTicketId(ticketId, page, limit);
         return Response.ok(messages).build();
     }
 
     // DELETE message by id
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"user", "admin"})
     public Response delete(@PathParam("id") UUID id) {
         try {
             boolean deleted = messageService.delete(id);

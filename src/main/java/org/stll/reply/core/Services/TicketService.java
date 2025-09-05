@@ -5,8 +5,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.stll.reply.core.Entities.Ticket;
 import org.stll.reply.core.Repositories.TicketRepository;
+import org.stll.reply.core.dtos.PaginationResponse;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,14 +26,14 @@ public class TicketService {
 
     // FIND all tickets created by USER id
     @Transactional
-    public List<Ticket> findTicketsByUserId(UUID userId) {
-        return ticketRepository.findAllTicketsByUserId(userId);
+    public PaginationResponse<Ticket> findTicketsByUserId(UUID userId, int page, int limit) {
+        return ticketRepository.findAllTicketsByUserId(userId, page, limit);
     }
 
     // FIND all open tickets
     @Transactional
-    public List<Ticket> findAllOpenTickets() {
-        return ticketRepository.findAllOpenTickets();
+    public PaginationResponse<Ticket> findAllOpenTickets(int page, int limit) {
+        return ticketRepository.findAllOpenTickets(page, limit);
     }
 
     // FIND one ticket by Ticket id
@@ -47,8 +47,8 @@ public class TicketService {
     }
 
     // FIND ALL tickets Ids with messages by user
-    public List<UUID> getTicketIdsWithUserMessagesByUserId(UUID userId) {
-        return ticketRepository.findAllTicketIdWithUserMessages(userId);
+    public PaginationResponse<UUID> getTicketIdsWithUserMessagesByUserId(UUID userId, int page, int limit) {
+        return ticketRepository.findAllTicketIdWithUserMessages(userId, page, limit);
     }
 
     // UPDATE ticket

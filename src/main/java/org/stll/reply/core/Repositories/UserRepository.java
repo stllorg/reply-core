@@ -40,6 +40,7 @@ public class UserRepository {
         return user;
     }
 
+    // UPDATE USER
     @Transactional
     public Optional<User> update(User user) {
         int rowsAffected = em.createNativeQuery(
@@ -59,6 +60,7 @@ public class UserRepository {
         return Optional.empty();
     }
 
+    // DELETE USER BY ID
     @Transactional
     public boolean deleteById(UUID id) {
 
@@ -74,6 +76,7 @@ public class UserRepository {
         return rowsAffected > 0;
     }
 
+    // FIND USER BY EMAIL
     public Optional<User> findByEmail(String email) {
         try {
             User user = (User) em.createNativeQuery(
@@ -87,6 +90,7 @@ public class UserRepository {
         }
     }
 
+    // FIND USER BY USERNAME
     public Optional<User> findByUsername(String username) {
         try {
             User user = (User) em.createNativeQuery(
@@ -100,6 +104,7 @@ public class UserRepository {
         }
     }
 
+    // FIND USER BY ID
     public Optional<User> findById(UUID id) {
         try {
             User user = (User) em.createNativeQuery(
@@ -113,6 +118,7 @@ public class UserRepository {
         }
     }
 
+    // PAGINATION - FIND ALL USERS
     @SuppressWarnings("unchecked")
     public PaginationResponse<UserDTO> findAll(int page, int limit) {
         int offset = (page - 1) * limit;

@@ -8,6 +8,7 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Ticket;
+import org.stll.reply.core.dtos.PaginationResponse;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -47,39 +48,55 @@ public class TicketRepository {
         return ticket;
     }
 
-    public List<Ticket> findAllTicketsByUserId(UUID userId) {
+    // PAGINATION - FIND ALL TICKETS
+    @SuppressWarnings("unchecked")
+    public PaginationResponse<Ticket> findAllTicketsByUserId(UUID userId, int page, int limit) {
+        int offset = (page - 1) * limit;
 
-        List<Ticket> tickets;
+        // 1. Query to count total number of users
+        long totalTickets = (long) em.createNativeQuery("SELECT COUNT(*) FROM tickets WHERE user_id = ?"
+        )
+        .setParameter(1, userId)
+        .getSingleResult();
 
-        try {
-            tickets = em.createNativeQuery(
-                        "SELECT id, subject, status, created_at FROM tickets WHERE user_id = ?"
+            // 2. Query to find messages for the given page based on LIMIT and OFFSET
+            List<Ticket> tickets = (List<Ticket>) em.createNativeQuery(
+                        "SELECT id, subject, status, is_repeat, created_at, user_id FROM tickets WHERE user_id = ? ORDER BY created_at ASC LIMIT ? OFFSET ?", Ticket.class
                 )
                 .setParameter(1, userId)
+                .setParameter(2, limit)
+                .setParameter(3, offset)
                 .getResultList();
+        
+        long totalPages = (long) Math.ceil((double) totalTickets / limit);
 
-        } catch (jakarta.persistence.NoResultException e) {
-            tickets = Collections.emptyList();
-        }
-
-        return tickets;
+        // 3. Build the pagination object
+        return new PaginationResponse<>(tickets, page, limit, totalTickets, totalPages);
+        
     }
 
-    public List<Ticket> findAllOpenTickets() {
+    // PAGINATION - FIND ALL OPEN TICKETS
+    @SuppressWarnings("unchecked")
+    public PaginationResponse<Ticket> findAllOpenTickets(int page, int limit) {
+        int offset = (page - 1) * limit;
 
-        List<Ticket> tickets;
+        
+        long totalTickets = (long) em.createNativeQuery(
+            "SELECT COUNT(*) FROM tickets t WHERE t.status = 'open'"
+        )
+        .getSingleResult();
 
-        try {
-            tickets = em.createNativeQuery(
-                            "SELECT t.id, t.subject, t.created_at FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' "
+
+            List<Ticket> tickets = (List<Ticket>) em.createNativeQuery(
+                            "SELECT t.id, t.subject, t.status, t.is_repeat, t.created_at, t.user_id FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' ORDER BY t.created_at ASC LIMIT ? OFFSET ?", Ticket.class
                     )
+                    .setParameter(1, limit)
+                    .setParameter(2, offset)
                     .getResultList();
+        
+        long totalPages = (long) Math.ceil((double) totalTickets / limit);
 
-        } catch (jakarta.persistence.NoResultException e) {
-            tickets = Collections.emptyList();
-        }
-
-        return tickets;
+        return new PaginationResponse<>(tickets, page, limit, totalTickets, totalPages);
     }
 
     // Should find the id of the most recent ticket created by user
@@ -142,26 +159,38 @@ public class TicketRepository {
         return em.find(Ticket.class, ticket.getId());
     }
 
-    public List<UUID> findAllTicketIdWithUserMessages(UUID userId) {
+    // PAGINATION - FIND ALL TICKETS
+    @SuppressWarnings("unchecked")
+    public PaginationResponse<UUID> findAllTicketIdWithUserMessages(UUID userId, int page, int limit) {
+        int offset = (page -1) * limit;
 
-        List<UUID> ticketsIds;
-        try {
+        // 1. Query to count total number of users
+        long totalTickets = (long) em.createNativeQuery(
+            "SELECT COUNT (DISTINCT ticket_id) FROM ticket_messages WHERE user_id = ?"
+        )
+        .setParameter(1, userId)
+        .getSingleResult();
+
+        // 2. Query to find messages for the given page based on LIMIT and OFFSET
             List<Object> foundTicketsIds = em.createNativeQuery(
-                            "SELECT DISTINCT ticket_id FROM ticket_messages WHERE user_id = ?"
+                            "SELECT DISTINCT ticket_id FROM ticket_messages WHERE user_id = ? ORDER BY ticket_id ASC LIMIT ? OFFSET ?"
                     )
                     .setParameter(1, userId)
+                    .setParameter(2, limit)
+                    .setParameter(3, offset)
                     .getResultList();
 
-            ticketsIds = (List<UUID>) foundTicketsIds.stream()
+            List<UUID> ticketsIds = (List<UUID>) foundTicketsIds.stream()
                     .map(obj -> (UUID) obj)
                     .collect(Collectors.toList());
 
             log.info("TicketRepository: Tickets Found  : " + ticketsIds.size());
-        } catch (jakarta.persistence.NoResultException e) {
-            ticketsIds = Collections.emptyList();
-        }
 
-        return ticketsIds;
+        // 3. Build the pagination object
+        long totalPages = (long) Math.ceil((double) totalTickets / limit);
+
+
+        return new PaginationResponse<>(ticketsIds, page, limit, totalTickets, totalPages);
     }
 
     @Transactional
