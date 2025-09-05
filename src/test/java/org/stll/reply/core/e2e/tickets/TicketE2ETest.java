@@ -23,6 +23,7 @@ public class TicketE2ETest {
     private static final String UPDATED_TICKET_SUBJECT = "Updated ticket subject for E2E test.";
 
     private static String jwtToken;
+    private static String userId;
     private static String createdTicketId;
 
     @Test
@@ -82,6 +83,9 @@ public class TicketE2ETest {
                 .body("subject", equalTo(TICKET_SUBJECT))
                 .body("id", notNullValue())
                 .body("userId", notNullValue());
+        if (userId == null) {
+            userId = response.jsonPath().getString("userId");
+        }
 
         createdTicketId = response.jsonPath().getString("id");
     }
@@ -144,6 +148,27 @@ public class TicketE2ETest {
 
     @Test
     @Order(7)
+    public void testFetchAllTicketsByUserId() {
+        if (userId == null) {
+            throw new IllegalStateException("User ID not available. Registration or authentication test might have failed.");
+        }
+
+        given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/tickets/user/" + userId + "?limit=15&page=1")
+                .then()
+                .statusCode(200)
+                .body("data", not(empty()))
+                .body("data.size()", greaterThan(0))
+                .body("totalItems", greaterThan(0))
+                .body("data[0].subject", notNullValue())
+                .body("data[0].status", notNullValue());
+    }
+
+    @Test
+    @Order(8)
     public void testDeleteTicketAsNonAdminFails() {
         if (createdTicketId == null) {
             throw new IllegalStateException("Ticket ID not available. Ticket creation test might have failed.");
