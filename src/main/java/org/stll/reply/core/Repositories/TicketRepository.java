@@ -61,7 +61,7 @@ public class TicketRepository {
 
             // 2. Query to find messages for the given page based on LIMIT and OFFSET
             List<Ticket> tickets = (List<Ticket>) em.createNativeQuery(
-                        "SELECT id, subject, status, created_at FROM tickets WHERE user_id = ? ORDER BY created_at ASC LIMIT ? OFFSET ?", Ticket.class
+                        "SELECT id, subject, status, is_repeat, created_at, user_id FROM tickets WHERE user_id = ? ORDER BY created_at ASC LIMIT ? OFFSET ?", Ticket.class
                 )
                 .setParameter(1, userId)
                 .setParameter(2, limit)
@@ -88,7 +88,7 @@ public class TicketRepository {
 
 
             List<Ticket> tickets = (List<Ticket>) em.createNativeQuery(
-                            "SELECT t.id, t.subject, t.created_at FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' ORDER BY t.created_at ASC LIMIT ? OFFSET ?", Ticket.class
+                            "SELECT t.id, t.subject, t.status, t.is_repeat, t.created_at, t.user_id FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = 'open' ORDER BY t.created_at ASC LIMIT ? OFFSET ?", Ticket.class
                     )
                     .setParameter(1, limit)
                     .setParameter(2, offset)
