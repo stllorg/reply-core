@@ -157,6 +157,7 @@ public class MessageE2ETest {
         }
 
         given()
+                .header("Authorization", "Bearer " + jwtToken)
                 .when()
                 .get("/messages/" + createdMessageId)
                 .then()

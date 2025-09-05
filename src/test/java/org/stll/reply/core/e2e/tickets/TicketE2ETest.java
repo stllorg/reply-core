@@ -120,6 +120,7 @@ public class TicketE2ETest {
 
         given()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + jwtToken)
                 .when()
                 .get("/tickets/" + createdTicketId)
                 .then()
