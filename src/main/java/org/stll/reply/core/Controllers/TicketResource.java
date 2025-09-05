@@ -8,13 +8,15 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.jbosslog.JBossLog;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.stll.reply.core.Entities.Ticket;
+import org.stll.reply.core.Entities.User;
 import org.stll.reply.core.Services.TicketService;
+import org.stll.reply.core.Services.UserService;
 import org.stll.reply.core.dtos.CreateTicketRequest;
+import org.stll.reply.core.dtos.PaginationResponse;
 import org.stll.reply.core.dtos.SaveTicketResponse;
 import org.stll.reply.core.dtos.UpdateTicketRequest;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +28,9 @@ public class TicketResource {
 
     @Inject
     TicketService ticketService;
+
+    @Inject
+    UserService userService;
 
     @Inject
     JsonWebToken jwt;
@@ -47,7 +52,6 @@ public class TicketResource {
             userId = UUID.fromString(userIdString);
         } catch (IllegalArgumentException e) {
             log.error("Failed to convert the user id from JWT claim to UUID:");
-            userId = null;
         }
 
         if (userId == null) {
@@ -71,6 +75,7 @@ public class TicketResource {
     // GET ticket
     @GET
     @Path("/{id}")
+    @RolesAllowed({"admin", "manager", "support", "user"})
     public Response getTicketById(@PathParam("id") UUID id) {
         return ticketService.findTicketById(id)
                 .map(ticket -> Response.ok(ticket).build())
@@ -80,10 +85,23 @@ public class TicketResource {
     // UPDATE ticket
     @PUT
     @Path("/{id}")
+    @RolesAllowed("user")
     public Response updateTicket(@PathParam("id") UUID id, UpdateTicketRequest request) {
+        String userIdString = jwt.getClaim("id").toString();
+        UUID userId = UUID.fromString(userIdString);
+
         Optional <Ticket> ticketOptional = ticketService.findTicketById(id);
 
         if (ticketOptional.isPresent()) {
+            UUID ticketCreatorId = ticketOptional.get().getUserId();
+
+            if (userId.equals(ticketCreatorId)) {
+                log.info("TicketResource The user with id " + userId + " requested to update the ticket.");
+            } else {
+                log.info("TicketResource The user with id " + userId + " has no rights to manage third party data.");
+                return Response.status(Response.Status.FORBIDDEN).build();
+            }
+
             Ticket ticketToUpdate = ticketOptional.get();
             ticketToUpdate.setSubject(request.subject);
 
@@ -131,24 +149,67 @@ public class TicketResource {
     // GET ALL Open TICKETS
     @GET
     @Path("/open")
-    public Response getAllOpenTickets() {
-        List<Ticket> openTickets = ticketService.findAllOpenTickets();
+    @RolesAllowed({"admin", "manager", "support"})
+    public Response getAllOpenTickets(@QueryParam("page") @DefaultValue("1") int page,
+                                      @QueryParam("limit") @DefaultValue("15") int limit) {
+        PaginationResponse<Ticket> openTickets = ticketService.findAllOpenTickets(page, limit);
         return Response.ok(openTickets).build();
     }
 
     // GET ALL TICKETS created by a User
     @GET
     @Path("/user/{userId}")
-    public Response getTicketsByUserId(@PathParam("userId") UUID id) {
-        List<Ticket> tickets = ticketService.findTicketsByUserId(id);
+    @RolesAllowed("user")
+    public Response getTicketsByUserId(@PathParam("userId") UUID userId,
+    @QueryParam("page") @DefaultValue("1") int page,
+                                       @QueryParam("limit") @DefaultValue("15") int limit) {
+        String userIdString = jwt.getClaim("id").toString();
+        UUID currentUserId = UUID.fromString(userIdString);
+
+        // Check if the user with token is the target User
+        if (currentUserId.equals(userId)) {
+            log.info("TicketResource The user with id " + currentUserId + " requested to fetch all tickets.");
+        } else {
+            log.info("TicketResource The user with id " + currentUserId + " has no rights to see third party tickets.");
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+
+        // Verify if the user exists
+        Optional<User> userOptional = userService.findUserById(userId);
+        if (userOptional.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        PaginationResponse<Ticket> tickets = ticketService.findTicketsByUserId(userId, page, limit);
         return Response.ok(tickets).build();
     }
 
-    // GET Tickets Ids with User Messages By User Id
+    // GET Tickets Ids with User Messages By User id
     @GET
     @Path("/user/{userId}/tickets")
-    public Response getTicketIdsWithUserMessagesByUserId(@PathParam("userId") UUID userId) {
-        List<UUID> ticketIds = ticketService.getTicketIdsWithUserMessagesByUserId(userId);
+    @RolesAllowed({"admin", "manager", "support", "user"})
+    public Response getTicketIdsWithUserMessagesByUserId(@PathParam("userId") UUID userId,
+                                                         @QueryParam("page") @DefaultValue("1") int page,
+                                                         @QueryParam("limit") @DefaultValue("15") int limit) {
+        String userIdString = jwt.getClaim("id").toString();
+        UUID currentUserId = UUID.fromString(userIdString);
+
+
+        // Check if the user with token is the target User
+        if (currentUserId.equals(userId)) {
+            log.info("TicketResource The user with id " + currentUserId + " requested to retrieve all tickets ids with user interaction.");
+        } else {
+            log.info("TicketResource The user with id " + currentUserId + " has no rights to retrieve third party tickets data.");
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+
+        // Verify if the target user exists
+        Optional<User> userOptional = userService.findUserById(userId);
+        if (userOptional.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        PaginationResponse<UUID> ticketIds = ticketService.getTicketIdsWithUserMessagesByUserId(userId, page, limit);
         return Response.ok(ticketIds).build();
     }
 }
