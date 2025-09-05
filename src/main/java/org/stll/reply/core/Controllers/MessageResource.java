@@ -71,6 +71,7 @@ public class MessageResource {
     // UPDATE message
     @PUT
     @Path("/{id}")
+    @RolesAllowed("user")
     public Response updateMessage(@PathParam("id") UUID id, UpdateMessageRequest request) {
         Optional<Message> messageOptional = messageService.findMessageById(id);
 
@@ -100,6 +101,7 @@ public class MessageResource {
     // GET message by id
     @GET
     @Path("/{id}")
+    @RolesAllowed({"user", "admin", "support", "manager"})
     public Response getMessageById(@PathParam("id") UUID id) {
         return messageService.findMessageById(id)
                 .map(ticket -> Response.ok(ticket).build())
@@ -109,6 +111,7 @@ public class MessageResource {
     // GET Messages BY Ticket id
     @GET
     @Path("/ticket/{ticketId}")
+    @RolesAllowed({"user", "admin", "support", "manager"})
     public Response getMessagesByTicketId(@PathParam("ticketId") UUID ticketId,
                                           @QueryParam("page") @DefaultValue("1") int page,
                                           @QueryParam("limit") @DefaultValue("15") int limit) {
@@ -120,6 +123,7 @@ public class MessageResource {
     // DELETE message by id
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"user", "admin"})
     public Response delete(@PathParam("id") UUID id) {
         try {
             boolean deleted = messageService.delete(id);
