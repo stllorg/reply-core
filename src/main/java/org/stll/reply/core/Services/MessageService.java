@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.stll.reply.core.Entities.Message;
 import org.stll.reply.core.Repositories.MessageRepository;
+import org.stll.reply.core.dtos.PaginationResponse;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +31,8 @@ public class MessageService {
     }
 
     // FIND ALL messages by ticket id
-    public List<Message> getMessagesByTicketId(UUID ticketId) {
-        return messageRepository.findAllMessagesByTicketId(ticketId);
+    public PaginationResponse<Message> getMessagesByTicketId(UUID ticketId, int page, int limit) {
+        return messageRepository.findAllMessagesByTicketId(ticketId, page, limit);
     }
 
     // UPDATE message

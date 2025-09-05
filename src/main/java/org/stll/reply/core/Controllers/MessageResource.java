@@ -11,11 +11,11 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.stll.reply.core.Entities.Message;
 import org.stll.reply.core.Services.MessageService;
 import org.stll.reply.core.dtos.CreateMessageRequest;
+import org.stll.reply.core.dtos.PaginationResponse;
 import org.stll.reply.core.dtos.SaveMessageResponse;
 import org.stll.reply.core.dtos.UpdateMessageRequest;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -109,8 +109,11 @@ public class MessageResource {
     // GET Messages BY Ticket id
     @GET
     @Path("/ticket/{ticketId}")
-    public Response getMessagesByTicketId(@PathParam("ticketId") UUID ticketId) {
-        List<Message> messages = messageService.getMessagesByTicketId(ticketId);
+    public Response getMessagesByTicketId(@PathParam("ticketId") UUID ticketId,
+                                          @QueryParam("page") @DefaultValue("1") int page,
+                                          @QueryParam("limit") @DefaultValue("15") int limit) {
+
+        PaginationResponse<Message> messages = messageService.getMessagesByTicketId(ticketId, page, limit);
         return Response.ok(messages).build();
     }
 

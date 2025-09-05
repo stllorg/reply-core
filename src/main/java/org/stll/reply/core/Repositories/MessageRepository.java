@@ -8,6 +8,7 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.jbosslog.JBossLog;
 import org.stll.reply.core.Entities.Message;
+import org.stll.reply.core.dtos.PaginationResponse;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -72,18 +73,31 @@ public class MessageRepository {
         }
     }
 
+    // PAGINATION - FIND ALL MESSAGES
     @SuppressWarnings("unchecked")
-    public List<Message> findAllMessagesByTicketId(UUID ticketId) {
-        try {
-            return (List<Message>) em.createNativeQuery(
-                            "SELECT id, ticket_id, message, created_at, user_id FROM ticket_messages WHERE ticket_id = ?", Message.class
+    public PaginationResponse<Message> findAllMessagesByTicketId(UUID ticketId, int page, int limit) {
+        int offset = (page - 1) * limit;
+
+        // 1. Query to count the total number of messages for a specific ticket
+        long totalMessages = (long) em.createNativeQuery(
+            "SELECT COUNT(*) FROM ticket_messages WHERE ticket_id = ?"
+        )
+        .setParameter(1, ticketId)
+        .getSingleResult();
+        
+        // 2. Query to find messages for the given page based on LIMIT and OFFSET 
+            List<Message> messages = (List<Message>) em.createNativeQuery(
+                            "SELECT id, ticket_id, message, created_at, user_id FROM ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC LIMIT ? OFFSET ?", Message.class
                     )
                     .setParameter(1, ticketId)
+                    .setParameter(2, limit)
+                    .setParameter(3, offset)
                     .getResultList();
 
-        } catch (jakarta.persistence.NoResultException e) {
-            return Collections.emptyList();
-        }
+            long totalPages = (long) Math.ceil((double) totalMessages / limit);
+
+            // 3. Build the pagination object
+            return new PaginationResponse<>(messages, page, limit, totalMessages, totalPages);
     }
 
     public Optional<UUID> findIdOfLastMessageCreatedByUserId(UUID userId) {
